@@ -1,10 +1,8 @@
-'use strict';
-
-const EventEmitter = require('events');
-const { browser } = require('../constants');
+const EventEmitter = require("events");
+const { browser } = require("../constants");
 
 // eslint-disable-next-line
-const WebSocket = browser ? window.WebSocket : require('ws');
+const WebSocket = browser ? window.WebSocket : require("ws");
 
 const pack = (d) => JSON.stringify(d);
 const unpack = (s) => JSON.parse(s);
@@ -23,7 +21,7 @@ class WebSocketTransport extends EventEmitter {
 
     this.ws = new WebSocket(
       `ws://127.0.0.1:${port}/?v=1&client_id=${this.client.clientId}`,
-      browser ? undefined : { origin: this.client.options.origin },
+      browser ? undefined : { origin: this.client.options.origin }
     );
     this.ws.onopen = this.onOpen.bind(this);
     this.ws.onclose = this.onClose.bind(this);
@@ -32,14 +30,14 @@ class WebSocketTransport extends EventEmitter {
   }
 
   onOpen() {
-    this.emit('open');
+    this.emit("open");
   }
 
   onClose(event) {
     if (!event.wasClean) {
       return;
     }
-    this.emit('close', event);
+    this.emit("close", event);
   }
 
   onError(event) {
@@ -48,7 +46,7 @@ class WebSocketTransport extends EventEmitter {
     } catch {} // eslint-disable-line no-empty
 
     if (this.tries > 20) {
-      this.emit('error', event.error);
+      this.emit("error", event.error);
     } else {
       setTimeout(() => {
         this.connect();
@@ -57,7 +55,7 @@ class WebSocketTransport extends EventEmitter {
   }
 
   onMessage(event) {
-    this.emit('message', unpack(event.data));
+    this.emit("message", unpack(event.data));
   }
 
   send(data) {
@@ -68,7 +66,7 @@ class WebSocketTransport extends EventEmitter {
 
   close() {
     return new Promise((r) => {
-      this.once('close', r);
+      this.once("close", r);
       this.ws.close();
     });
   }

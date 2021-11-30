@@ -13,13 +13,17 @@ const OPCodes = {
 
 function getIPCPath(id) {
   if (process.platform === "win32") {
-    return `\\\\?\\pipe\\discord-ipc-${id}`;
+    const socketPath = `\\\\?\\pipe\\discord-ipc-${id}`;
+    console.log(`Found winderz socket @ ${socketPath}`)
+    return socketPath;
   }
   const {
     env: { XDG_RUNTIME_DIR, TMPDIR, TMP, TEMP },
   } = process;
   const prefix = XDG_RUNTIME_DIR || TMPDIR || TMP || TEMP || "/tmp";
-  return `${prefix.replace(/\/$/, "")}/discord-ipc-${id}`;
+  const socketPath = `${prefix.replace(/\/$/, "")}/discord-ipc-${id}`;
+  console.log(`Found *nix socket @ ${socketPath}`)
+  return socketPath;
 }
 
 function getIPC(id = 0) {
@@ -154,10 +158,17 @@ class IPCTransport extends EventEmitter {
   }
 
   send(data, op = OPCodes.FRAME) {
-    this.socket.write(encode(op, data));
+    if (!this.socket) {
+      return;
+    }
+    this.socket.write(encode(op, data));    
   }
 
   async close() {
+    if (!this.socket) {
+      return;
+    }
+
     return new Promise((r) => {
       this.once("close", r);
       this.send({}, OPCodes.CLOSE);
@@ -166,6 +177,10 @@ class IPCTransport extends EventEmitter {
   }
 
   ping() {
+    if (!this.socket) {
+      return;
+    }
+
     this.send(uuid(), OPCodes.PING);
   }
 }
